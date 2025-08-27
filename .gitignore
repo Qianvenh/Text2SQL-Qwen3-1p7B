@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+.env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Model files
+*.pt
+*.bin
+*.ckpt
+*.pth
+*.safetensors
+
+# Hugging Face & Datasets
+huggingface/
+transformers/
+.cache/
+datasets/
+
+# Outputs
+output/
+checkpoints/
+runs/
+# logs/
+# *.log
+
+# System & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# checkpoints
+saves/*
+!saves/readme.md
+
+# dataset
+*.parquet
+
+# database for evaluation
+test-suite-sql-eval/database/*
+!test-suite-sql-eval/database/readme.md
