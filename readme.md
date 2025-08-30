@@ -1,3 +1,7 @@
+# Text2SQL-Qwen3-1p7B
+
+SFT and Context Engineering the qwen3 1.7B for Text2SQL task
+
 ## Overview
 
 训练整体基于[LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory)框架；整合[ROLL](https://github.com/alibaba/ROLL)框架的子模块[MCoreAdapter](https://github.com/alibaba/ROLL/tree/main/mcore_adapter)，使得LLaMA-Factory兼容Megatron。
@@ -10,7 +14,7 @@ Full Parameters SFT 采用 DeepSpeed Zero-2 + Megatron TP 方案
 
 Text2SQL评估框架：[test-suite-sql-eval](https://github.com/Qianvenh/Text2SQL-Qwen3-1p7B/tree/main/test-suite-sql-eval)
 
-## 模型SQL生成性能
+## 模型SQL生成表现
 
 采用执行准确率（EXECUTION ACCURACY）作为Benchmark
 
