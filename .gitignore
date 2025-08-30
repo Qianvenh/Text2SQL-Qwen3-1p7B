@@ -37,11 +37,15 @@ Thumbs.db
 
 # checkpoints
 saves/*
-!saves/readme.md
+!saves/.gitkeep
 
 # dataset
 *.parquet
+milvus_lite.db
 
 # database for evaluation
 test-suite-sql-eval/database/*
 !test-suite-sql-eval/database/readme.md
+
+# some scripts
+install_transformer_engine.sh
