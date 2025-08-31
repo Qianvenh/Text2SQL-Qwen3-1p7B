@@ -1,73 +1,93 @@
-# Text2SQL-Qwen3-1p7B
+# Text2SQL-Qwen3-1.7B
 
-SFT and Context Engineering the qwen3 1.7B for Text2SQL task
+Fine-tuning and context engineering of **Qwen3-1.7B** for the Text-to-SQL task.
 
-## Overview
+## 📖 训练设置
 
-训练整体基于[LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory)框架；整合[ROLL](https://github.com/alibaba/ROLL)框架的子模块[MCoreAdapter](https://github.com/alibaba/ROLL/tree/main/mcore_adapter)，使得LLaMA-Factory兼容Megatron。
+* 基于框架：[LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory)
+* 集成模块：[ROLL/MCoreAdapter](https://github.com/alibaba/ROLL/tree/main/mcore_adapter)，用于使 LLaMA-Factory 兼容 Megatron
+* 设备：**NVIDIA GeForce RTX 4090 (24GB) × 4**
 
-设备：NVIDIA GeForce RTX 4090 (24G) * 4
+### 训练方式
 
-LoRA SFT 采用 DeepSpeed Zero-3 方案
+* **LoRA SFT**：仅微调 `Q_proj` 与 `V_proj`，采用 **DeepSpeed ZeRO-3** 配置
+* **Full Parameters SFT**：全参数微调，采用 **DeepSpeed ZeRO-2 + Megatron Tensor Parallelism (TP)** 配置
 
-Full Parameters SFT 采用 DeepSpeed Zero-2 + Megatron TP 方案
+### 数据集
 
-Text2SQL评估框架：[test-suite-sql-eval](https://github.com/Qianvenh/Text2SQL-Qwen3-1p7B/tree/main/test-suite-sql-eval)
+* 训练集：[fahmiaziz/text2sql-dataset](https://huggingface.co/datasets/fahmiaziz/text2sql-dataset)
+* 数据预处理：移除了包含测试样本的部分，详见 [dataset\_process.ipynb](https://github.com/Qianvenh/Text2SQL-Qwen3-1p7B/blob/main/data/dataset_process/dataset_process.ipynb)
 
-## 模型SQL生成表现
+### 数据格式示例
 
-采用执行准确率（EXECUTION ACCURACY）作为Benchmark
+```text
+<|im_start|>system
+Given the database schema and the user question, generate the corresponding SQL query. 
+The output must be only a valid SQL query, without explanations, comments, or extra text.
+<|im_end|>
+<|im_start|>user
 
-### EXECUTION ACCURACY 比较
+[SCHEMA]
+CREATE TABLE salesperson (salesperson_id INT, name TEXT, region TEXT);
+INSERT INTO salesperson (salesperson_id, name, region) VALUES 
+(1, 'John Doe', 'North'), 
+(2, 'Jane Smith', 'South');
 
-| 模型 | Easy | Medium | Hard | Extra | All | Joint_All |
-|------|------|--------|------|-------|-----|-----------|
-| baseline | 0.859 | 0.587 | 0.431 | 0.151 | 0.556 | 0.556 |
-| qwen3_1p7B_lora_32r | 0.798 | 0.473 | 0.374 | 0.193 | 0.489 | 0.489 |
-| qwen3_1p7B_lora_128r | 0.734 | 0.426 | 0.322 | 0.151 | 0.438 | 0.438 |
-| qwen3_1p7B_full  | 0.839 | 0.574 | 0.500 | 0.241 | 0.572 | 0.572 |
+CREATE TABLE timber_sales (sales_id INT, salesperson_id INT, volume REAL, sale_date DATE);
+INSERT INTO timber_sales (sales_id, salesperson_id, volume, sale_date) VALUES 
+(1, 1, 120, '2021-01-01'), 
+(2, 1, 150, '2021-02-01'), 
+(3, 2, 180, '2021-01-01');
 
-### 模型性能排名
-
-#### 总体准确率 (All)
-1. **qwen3_1p7B_full**: 0.572
-2. **baseline**: 0.556  
-3. **qwen3_1p7B_lora_32r**: 0.489
-4. **qwen3_1p7B_lora_128r**: 0.438
-
-#### 各难度级别最佳模型
-- **Easy**: baseline (0.859)
-- **Medium**: qwen3_1p7B_full (0.574)
-- **Hard**: qwen3_1p7B_full (0.500)
-- **Extra**: qwen3_1p7B_full (0.241)
-
-### 关键观察
-- `qwen3_1p7B_full` 在总体性能上表现最佳，特别是在 Medium、Hard 和 Extra 难度上
-- `baseline` 在 Easy 难度上表现最好，但在复杂查询上性能下降明显  
-- 随着 LoRA rank 增加（32r → 128r），模型性能反而下降
-- 所有模型在 Extra 难度上的表现都相对较差，显示了极难查询的挑战性
-
-### 性能对比图表
-
-#### 各难度级别性能对比
+[QUESTION]
+What is the total volume of timber sold by each salesperson, sorted by salesperson?
+<|im_end|>
+<|im_start|>assistant
+SELECT salesperson_id, name, SUM(volume) AS total_volume 
+FROM timber_sales 
+JOIN salesperson ON timber_sales.salesperson_id = salesperson.salesperson_id 
+GROUP BY salesperson_id, name 
+ORDER BY total_volume DESC;
+<|im_end|>
 ```
-Easy    ████████▌  baseline (0.859)
-        ████████▍ qwen3_1p7B_full (0.839)  
-        ███████▊  qwen3_1p7B_lora_32r (0.798)
-        ███████▎  qwen3_1p7B_lora_128r (0.734)
 
-Medium  █████▊    qwen3_1p7B_full (0.574)
-        █████▉    baseline (0.587)
-        ████▋     qwen3_1p7B_lora_32r (0.473)  
-        ████▎     qwen3_1p7B_lora_128r (0.426)
+---
 
-Hard    █████      qwen3_1p7B_full (0.500)
-        ████▎     baseline (0.431)
-        ███▋      qwen3_1p7B_lora_32r (0.374)
-        ███▎      qwen3_1p7B_lora_128r (0.322)
+## 📊 模型表现
 
-Extra   ██▍       qwen3_1p7B_full (0.241)
-        ██▍       qwen3_1p7B_lora_32r (0.193)  
-        █▌         baseline (0.151)
-        █▌         qwen3_1p7B_lora_128r (0.151)
-```
+* 评估框架：[test-suite-sql-eval](https://github.com/Qianvenh/Text2SQL-Qwen3-1p7B/tree/main/test-suite-sql-eval)
+* 测试集：[Spider dev dataset](https://github.com/eosphoros-ai/DB-GPT-Hub/blob/main/src/dbgpt-hub-sql/dbgpt_hub_sql/data/eval_data/dev_sql.json)
+* 评价指标：**Execution Accuracy (执行准确率)**
+
+### 🔧 训练-测试差异缓解
+
+* **问题**：训练集中的 SCHEMA 用 `CREATE TABLE` 表示，而测试集中的 SCHEMA 为自然语言描述
+* **解决方案**：利用 SoTA 大模型将测试集 SCHEMA 转换为 `CREATE TABLE` 语句
+
+  * 脚本：[response\_table\_creating.py](https://github.com/Qianvenh/Text2SQL-Qwen3-1p7B/blob/main/data/dataset_process/response_table_creating.py)
+
+### 📈 结果对比（Execution Accuracy）
+
+| 模型                      | Easy      | Medium    | Hard      | Extra     | All       |
+| ----------------------- | --------- | --------- | --------- | --------- | --------- |
+| baseline                | **85.9%** | **58.7%** | 43.1%     | 15.1%     | 55.6%     |
+| qwen3\_1p7B\_lora\_32r  | 79.8%     | 47.3%     | 37.4%     | 19.3%     | 48.9%     |
+| qwen3\_1p7B\_lora\_128r | 73.4%     | 42.6%     | 32.2%     | 15.1%     | 43.8%     |
+| qwen3\_1p7B\_full       | 85.5%     | 57.6%     | **52.3%** | **21.7%** | **57.6%** |
+
+---
+
+## 🔍 关键观察
+
+* **全参数微调 (qwen3\_1p7B\_full)** 整体表现最佳，尤其在 Medium、Hard、Extra 难度上
+* **baseline** 在 Easy 难度领先，但在复杂查询上性能下降明显
+* **LoRA rank 增大 (32r → 128r)** 反而导致性能下降
+* **Extra 难度** 对所有模型仍然是显著挑战
+
+---
+
+## 📊 可视化表现
+
+（图表待补充）
+
+---

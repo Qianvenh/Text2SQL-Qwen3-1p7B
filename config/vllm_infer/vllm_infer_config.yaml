@@ -1,0 +1,66 @@
+# VLLM Inference Configuration
+### Model
+model_name_or_path: saves/qwen3-1.7B-tp_dp_p2train/hf_model
+trust_remote_code: true
+
+### Engine Arguments
+dtype: bfloat16
+max_model_len: 1024
+tensor_parallel_size: 2
+pipeline_parallel_size: 1
+disable_log_stats: true
+enable_lora: false
+gpu_memory_utilization: 0.9
+max_num_seqs: 32
+max_lora_rank: 32
+
+### LoRA Settings
+lora_adapter_path: null  # set to null for zero-shot inference # modify
+
+### Sampling Parameters
+repetition_penalty: 1.1
+temperature: 0.2
+top_p: 0.9
+top_k: -1
+max_tokens: 1024
+skip_special_tokens: true
+seed: 42
+
+### Input/Output Files
+input_file: data/infer_data_and_gt/dev_infer_data.jsonl
+output_file: data/infer_data_and_gt/infer_res/qwen3_1p7B_tp_dp_P2trainP2.json
+
+### Processing
+batch_size: 16
+
+prompt_template: | # P2 - prompt2
+  <|im_start|>system
+  Given the database schema and the user question, generate the corresponding SQL query.
+  The output must be only a valid SQL query, without explanations, comments, or extra text.
+  <|im_end|>
+  <|im_start|>user
+  [SCHEMA]
+  {schema}
+  [QUESTION]
+  {question}
+  <|im_end|>
+  <|im_start|>assistant
+  <think>
+
+  </think>
+  
+# prompt_template: | # P1 - prompt1
+#   <|im_start|>system
+#   Given the database schema and the user question, generate the corresponding SQL query.
+#   <|im_end|>
+#   <|im_start|>user
+#   \[SCHEMA]
+#   {schema}
+#   \[QUESTION]
+#   {question}
+#   <|im_end|>
+#   <|im_start|>assistant
+#   <think>
+
+#   </think>
+  

@@ -60,10 +60,7 @@ class Text2SQLSearcherWithRerank:
             self.vector_store = Milvus(
                 embedding_function=self.embeddings,
                 collection_name=self.collection_name,
-                connection_args={
-                    "uri": MILVUS_CONFIG["uri"]
-                }
-            )
+                connection_args={"uri": MILVUS_CONFIG["uri"]})
             logger.info(f"已连接到向量数据库集合: {self.collection_name}")
         except Exception as e:
             logger.error(f"连接向量数据库失败: {e}")

@@ -1,6 +1,6 @@
 workdir=$(cd $(dirname $0); pwd)
 configdir="$workdir/config/train"
-scriptdir="$workdir/scripts"
+scriptdir="$workdir/src"
 WORLD_SIZE=4
 export NCCL_P2P_DISABLE=1
 export NCCL_IB_DISABLE=1

@@ -1,16 +1,3 @@
-{
-	"text2sql": {
-    "file_name": "text2sql.json",
-    "formatting": "sharegpt",
-    "columns": {
-      "messages": "conversations",
-      "system": "system"
-    },
-    "tags": {
-      "role_tag": "from",
-      "content_tag": "value",
-      "user_tag": "user",
-      "assistant_tag": "assistant"
-    }
-  }
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:7142208578dcf8b2dd57aff6a6384005ce5ee42e81218f52ec59443b4ca87ef1
+size 307
