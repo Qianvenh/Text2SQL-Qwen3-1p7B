@@ -64,7 +64,7 @@ ORDER BY total_volume DESC;
 * **问题**：训练集中的 SCHEMA 用 `CREATE TABLE` 表示，而测试集中的 SCHEMA 为自然语言描述
 * **解决方案**：利用 SoTA 大模型将测试集 SCHEMA 转换为 `CREATE TABLE` 语句
 
-  * 脚本：[response\_table\_creating.py](https://github.com/Qianvenh/Text2SQL-Qwen3-1p7B/blob/main/data/dataset_process/response_table_creating.py)
+  * 脚本：[request\_LLM\_table\_creating.py](https://github.com/Qianvenh/Text2SQL-Qwen3-1p7B/blob/main/data/dataset_process/request_LLM_table_creating.py)
 
 ### 📈 结果对比（Execution Accuracy）
 
