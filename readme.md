@@ -51,7 +51,35 @@ ORDER BY total_volume DESC;
 <|im_end|>
 ```
 
----
+## 🛠️ 项目结构与工具说明
+
+### Scripts 目录脚本说明
+
+项目的 `scripts/` 目录包含了完整的训练、推理和评估流程脚本：
+
+* `qwen3_1p7B_train.sh`: LoRA 微调训练脚本，使用 LLaMA-Factory 框架
+* `megatron_deepspeed_train.sh`: Megatron + DeepSpeed 全参数微调训练脚本
+* `merge_hf_lora.sh`: LoRA 权重合并脚本，将训练好的 LoRA 权重合并到基础模型
+* `mg2hf.sh`: Megatron 格式模型转换为 HuggingFace 格式的脚本
+* `infer_vllm.sh`: 使用 vLLM 框架进行模型推理的脚本
+* `evaluate_sql.sh`: SQL 评估脚本，计算模型在测试集上的执行准确率
+
+### RAG 上下文工程模块
+
+位于 src/RAG/ 目录的向量检索与重排序系统：
+
+`vector_db_builder_qwen.py`: 向量数据库构建工具
+
+- 使用 ijson 流式处理训练数据 text2sql.json
+基于 Qwen3-Embedding 模型生成问题向量
+构建 Milvus 向量数据库索引，存储问题-SQL对应关系
+
+`vector_search_with_rerank.py`: 智能检索与重排序工具
+
+- 基于向量相似度进行粗排检索
+- 使用 Qwen3-Reranker 进行精排序
+- 支持基于问题或SQL答案的重排序策略
+- `生成结构化的 Few-shot 示例上下文
 
 ## 📊 模型表现
 
@@ -75,19 +103,18 @@ ORDER BY total_volume DESC;
 | qwen3\_1p7B\_lora\_128r | 73.4%     | 42.6%     | 32.2%     | 15.1%     | 43.8%     |
 | qwen3\_1p7B\_full       | 85.5%     | 57.6%     | **52.3%** | **21.7%** | **57.6%** |
 
----
 
 ## 🔍 关键观察
 
 * **全参数微调 (qwen3\_1p7B\_full)** 整体表现最佳，尤其在 Medium、Hard、Extra 难度上
 * **baseline** 在 Easy 难度领先，但在复杂查询上性能下降明显
 * **LoRA rank 增大 (32r → 128r)** 反而导致性能下降
-* **Extra 难度** 对所有模型仍然是显著挑战
+* **Extra 难度** 对所有模型仍然是显著挑战\
+* **RAG_only_embedding** 在所有难度上表现中等，整体准确率为53.3%
+* **RAG_embedding+rerank** 通过重排序机制在Extra难度上有所提升，但整体准确率仍不高
+* **RAG方法 和 LoRA微调** 在当前训练集和模型上相比全参数微调模型仍有不足，但都能一定程度提升 Extra 难度上的性能
 
----
 
-## 📊 可视化表现
+## 📊 模型表现可视化
 
-（图表待补充）
-
----
+![难度级别对比柱状图](figs/model_performance_comparison.png)

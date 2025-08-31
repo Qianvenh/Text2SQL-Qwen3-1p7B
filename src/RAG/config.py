@@ -28,6 +28,11 @@ EMBEDDING_CONFIG = {
     "trust_remote_code": True  # Qwen模型需要此参数
 }
 
+RERANKER_CONFIG = {
+    "model_name": "/home/qianwenhao/LLM/Qwen3-Reranker-0.6B",
+	"device": "cuda"
+}
+
 # 文本分割配置
 TEXT_SPLITTER_CONFIG = {
     "chunk_size": 1000,
@@ -36,8 +41,8 @@ TEXT_SPLITTER_CONFIG = {
 
 # 搜索配置
 SEARCH_CONFIG = {
-    "default_k": 5,  # 默认返回结果数量
-    "max_k": 20      # 最大返回结果数量
+    "default_k": 4,  # 默认返回结果数量
+    "max_k": 30      # 最大返回结果数量
 }
 
 # 日志配置

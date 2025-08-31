@@ -1,12 +1,13 @@
 # VLLM Inference Configuration
 ### Model
-model_name_or_path: saves/qwen3-1.7B-tp_dp_p2train/hf_model
+# model_name_or_path: saves/qwen3-1.7B-tp_dp_p2train/hf_model
+model_name_or_path: /home/qianwenhao/LLM/Qwen3-1.7B # modify
 trust_remote_code: true
 
 ### Engine Arguments
 dtype: bfloat16
-max_model_len: 1024
-tensor_parallel_size: 2
+max_model_len: 4096
+tensor_parallel_size: 4
 pipeline_parallel_size: 1
 disable_log_stats: true
 enable_lora: false
@@ -28,10 +29,40 @@ seed: 42
 
 ### Input/Output Files
 input_file: data/infer_data_and_gt/dev_infer_data.jsonl
-output_file: data/infer_data_and_gt/infer_res/qwen3_1p7B_tp_dp_P2trainP2.json
+input_file_with_reference: data/infer_data_and_gt/dev_infer_data_with_reference.jsonl
+# output_file: data/infer_data_and_gt/infer_res/qwen3_1p7B_rag_only_embedding.json
+# output_file: data/infer_data_and_gt/infer_res/qwen3_1p7B_rag_embeddingNranker.json # modify
+output_file: data/infer_data_and_gt/infer_res/qwen3_1p7B_rag_embeddingNreranker_sqlkey.json # modify
+# output_file: data/infer_data_and_gt/infer_res/qwen3_1p7B_tp_dp_P2trainP2.json # modify
 
 ### Processing
-batch_size: 16
+batch_size: 8
+
+## RAG Settings
+use_reference_prompt: true
+# reference_type: reranked  # options: normal, reranked, ranked_sqlkey
+# reference_type: normal  # options: normal, reranked, ranked_sqlkey
+reference_type: reranked_sqlkey  # options: normal, reranked, ranked_sqlkey
+
+prompt_reference_template: | # P3 - prompt3
+  <|im_start|>system
+  Given the database schema and the user question, generate the corresponding SQL query.
+  The output must be only a valid SQL query, without explanations, comments, or extra text.
+  Here are some reference examples that might help you:
+  {reference_list}
+  <|im_end|>
+  <|im_start|>user
+  [SCHEMA]
+  {schema}
+  [QUESTION]
+  {question}
+  <|im_end|>
+  <|im_start|>assistant
+  <think>
+
+  </think>
+
+  [ANSWER]
 
 prompt_template: | # P2 - prompt2
   <|im_start|>system

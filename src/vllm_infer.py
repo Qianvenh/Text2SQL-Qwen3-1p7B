@@ -32,19 +32,31 @@ def main():
     
     # Extract configuration
     model_path = config['model_name_or_path']
-    input_file = config['input_file']
+    input_file = config['input_file'] if not config['use_reference_prompt'] else config['input_file_with_reference']
     output_file = config['output_file']
     batch_size = config['batch_size']
     
     prompts = []
     mapping = []
 
+    def get_prompt(item):
+        schema = item['table_creating']
+        question = item['input']
+        if config['use_reference_prompt']:
+            if config['reference_type'] == 'normal':
+                reference_items = item['normal_reference_prompt'] 
+            elif config['reference_type'] == 'reranked':
+                reference_items = item['reranked_reference_prompt']
+            elif config['reference_type'] == 'reranked_sqlkey':
+                reference_items = item['ranked_reference_prompt_sql_as_key']
+            return config['prompt_reference_template'].format(
+                schema=schema, question=question, reference_list=reference_items)
+        return config['prompt_template'].format(schema=schema, question=question)
+
+
     with jsonlines.open(input_file, 'r') as reader:
         for obj in reader:
-            schema = obj['table_creating']
-            question = obj['input']
-            prompt = config['prompt_template'].format(schema=schema, question=question)
-            prompts.append(prompt)
+            prompts.append(get_prompt(obj))
             mapping.append(obj)
 
     # Engine arguments from config
