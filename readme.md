@@ -51,6 +51,26 @@ ORDER BY total_volume DESC;
 <|im_end|>
 ```
 
+## 🧩 上下文工程方案
+
+### 知识库构建
+
+- 从 data/text2sql.json 中读取训练集数据
+- 使用 ijson 流式处理，提取 [QUESTION] 字段作为向量索引
+- 通过 Qwen3-Embedding 将 [QUESTION] 向量化
+- 存储于 Milvus 向量数据库
+
+### 检索与排序
+
+- 基于用户查询进行相似性搜索，获得粗排候选样本
+- 使用 Qwen3-Reranker 对结果进行精排
+- 取 Top-k 样本
+
+### 上下文增强
+
+- 将检索到的相关样本的 [QUESTION] 和 [ANSWER] 加入模型上下文，构建为 Few-shot Examples
+- 生成最终 SQL 答案
+
 ## 🛠️ 项目结构与工具说明
 
 ### Scripts 目录脚本说明
@@ -74,12 +94,12 @@ ORDER BY total_volume DESC;
 基于 Qwen3-Embedding 模型生成问题向量
 构建 Milvus 向量数据库索引，存储问题-SQL对应关系
 
-`vector_search_with_rerank.py`: 智能检索与重排序工具
+`vector_search_with_rerank.py`: 检索与重排序工具
 
 - 基于向量相似度进行粗排检索
 - 使用 Qwen3-Reranker 进行精排序
 - 支持基于问题或SQL答案的重排序策略
-- `生成结构化的 Few-shot 示例上下文
+- 生成结构化的 Few-shot 示例上下文
 
 ## 📊 模型表现
 
