@@ -39,10 +39,10 @@ output_file: data/infer_data_and_gt/infer_res/qwen3_1p7B_rag_embeddingNreranker_
 batch_size: 8
 
 ## RAG Settings
-use_reference_prompt: true
-# reference_type: reranked  # options: normal, reranked, ranked_sqlkey
+use_reference_prompt: true # false
+reference_type: reranked  # options: normal, reranked, ranked_sqlkey
 # reference_type: normal  # options: normal, reranked, ranked_sqlkey
-reference_type: reranked_sqlkey  # options: normal, reranked, ranked_sqlkey
+# reference_type: reranked_sqlkey  # options: normal, reranked, ranked_sqlkey
 
 prompt_reference_template: | # P3 - prompt3
   <|im_start|>system

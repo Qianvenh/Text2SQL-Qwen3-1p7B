@@ -258,7 +258,7 @@ class Text2SQLSearcherWithRerank:
 
 
 reference_prompt_template = """
-<reference_list description>{reference_items}
+<reference_list>{reference_items}
 </reference_list>
 """
 

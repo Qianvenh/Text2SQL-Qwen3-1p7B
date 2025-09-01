@@ -55,21 +55,62 @@ ORDER BY total_volume DESC;
 
 ### 知识库构建
 
-- 从 data/text2sql.json 中读取训练集数据
-- 使用 ijson 流式处理，提取 [QUESTION] 字段作为向量索引
-- 通过 Qwen3-Embedding 将 [QUESTION] 向量化
-- 存储于 Milvus 向量数据库
+- 从 `data/text2sql.json` 中读取训练集数据
+- 使用 `ijson` 流式处理，提取 `[QUESTION]` 字段作为向量索引
+- 通过 `Qwen3-Embedding` 将 `[QUESTION]` 向量化
+- 存储于 `Milvus` 向量数据库
 
 ### 检索与排序
 
 - 基于用户查询进行相似性搜索，获得粗排候选样本
-- 使用 Qwen3-Reranker 对结果进行精排
+- 使用 `Qwen3-Reranker` 对结果进行精排
 - 取 Top-k 样本
 
 ### 上下文增强
 
-- 将检索到的相关样本的 [QUESTION] 和 [ANSWER] 加入模型上下文，构建为 Few-shot Examples
+- 将检索到的相关样本的 `[QUESTION]` 和 `[ANSWER]` 加入模型上下文，构建为 Few-shot Examples
 - 生成最终 SQL 答案
+
+### 数据格式实例
+
+``` text
+ <|im_start|>system
+Given the database schema and the user question, generate the corresponding SQL query.
+The output must be only a valid SQL query, without explanations, comments, or extra text.
+Here are some reference examples that might help you:
+<reference_list> 
+  <reference_item id="0"> 
+  [QUESTION] What is the total number of speakers for each language? 
+  [ANSWER] SELECT Language, SUM(SpeakerCount) FROM LanguageSpeakers GROUP BY Language; 
+  </reference_item> 
+  <reference_item id="1"> 
+  [QUESTION] How many cinema do we have? 
+  [ANSWER] SELECT COUNT(*) FROM cinema; 
+  </reference_item> 
+  <reference_item id="2"> 
+  [QUESTION] How many tracks do we have? 
+  [ANSWER] SELECT COUNT(*) FROM track; 
+  </reference_item> 
+  <reference_item id="3"> 
+  [QUESTION] How many faculty do we have? 
+  [ANSWER] SELECT COUNT(*) FROM Faculty; 
+  </reference_item> 
+</reference_list>
+<|im_end|>
+<|im_start|>user
+[SCHEMA]
+<sql> CREATE TABLE stadium ( stadium_id INT PRIMARY KEY, location VARCHAR(255), name VARCHAR(255), capacity INT, highest INT, lowest INT, average INT ); CREATE TABLE singer ( singer_id INT PRIMARY KEY, name VARCHAR(255), country VARCHAR(255), song_name VARCHAR(255), song_release_year INT, age INT, is_male BOOLEAN ); CREATE TABLE concert ( concert_id INT PRIMARY KEY, concert_name VARCHAR(255), theme VARCHAR(255), stadium_id INT, year INT, FOREIGN KEY (stadium_id) REFERENCES stadium(stadium_id) ); CREATE TABLE singer_in_concert ( concert_id INT, singer_id INT, PRIMARY KEY (concert_id, singer_id), FOREIGN KEY (concert_id) REFERENCES concert(concert_id), FOREIGN KEY (singer_id) REFERENCES singer(singer_id) ); </sql>
+[QUESTION]
+How many singers do we have?
+<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+[ANSWER]
+SELECT COUNT(*) FROM singer;
+```
 
 ## 🛠️ 项目结构与工具说明
 
@@ -86,19 +127,19 @@ ORDER BY total_volume DESC;
 
 ### RAG 上下文工程模块
 
-位于 src/RAG/ 目录的向量检索与重排序系统：
+位于 `src/RAG/` 目录的向量检索与重排序系统：
 
 `vector_db_builder_qwen.py`: 向量数据库构建工具
 
-- 使用 ijson 流式处理训练数据 text2sql.json
-基于 Qwen3-Embedding 模型生成问题向量
-构建 Milvus 向量数据库索引，存储问题-SQL对应关系
+- 使用 `ijson` 流式处理训练数据 `text2sql.json`
+基于 `Qwen3-Embedding` 模型生成问题向量
+构建 `Milvus` 向量数据库索引，存储问题-SQL对应关系
 
 `vector_search_with_rerank.py`: 检索与重排序工具
 
 - 基于向量相似度进行粗排检索
-- 使用 Qwen3-Reranker 进行精排序
-- 支持基于问题或SQL答案的重排序策略
+- 使用 `Qwen3-Reranker` 进行精排序
+- 支持基于问题或 SQL 答案的重排序策略
 - 生成结构化的 Few-shot 示例上下文
 
 ## 📊 模型表现

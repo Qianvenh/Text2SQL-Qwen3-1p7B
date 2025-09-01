@@ -53,9 +53,12 @@ def main():
                 schema=schema, question=question, reference_list=reference_items)
         return config['prompt_template'].format(schema=schema, question=question)
 
-
+    is_first = True
     with jsonlines.open(input_file, 'r') as reader:
         for obj in reader:
+            if is_first:
+                print("Prompt Case:\n", get_prompt(obj))
+                is_first = False
             prompts.append(get_prompt(obj))
             mapping.append(obj)
 
